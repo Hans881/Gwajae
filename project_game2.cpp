@@ -153,7 +153,6 @@ void createenemy() {
 	showObject(enemy[2]);
 	ex[2] = 1100;
 	ey[2] = 23;
-	showMessage("이거");
 
 
 }
@@ -201,9 +200,5 @@ int main()
 	
 
 	startGame(scene1);
-	showMessage("이거");
-	showMessage("이거");
 
-	showMessage("이거");
-	showMessage("이거");
 }
