@@ -1,4 +1,5 @@
-﻿#include <bangtal.h>
+﻿#include<stdio.h>
+#include <bangtal.h>
 #include <math.h>
 #include <stdlib.h>
 //장면생성 시작화면, 게임화면, 설명화면
@@ -7,23 +8,26 @@ SceneID scene0,scene1,scene2;
 ObjectID map1, angel1,check,wall1,wall2;
 //적6개 생성
 ObjectID enemy[6];
-//공 5개 생성
-ObjectID ball[5];
+//공 8개 생성
+ObjectID ball[8];
+
+//	승리확정
+
 
 //버튼 생성
 ObjectID startbutton, howbutton, endbutton, restartbutton, startbutton2;
 
 //적들의 x, y좌표 생성
 double ex[6],ey[6];
-//총알 번호 0~9
+//공 번호 0~9
 int ballnum;
 //(p,k)는 현재 주인공의 위치, (a,b)는 각각 x,y방향 벡터값임
 double p, k, a, b;
 //(p_ball,k_ball)는 현재 공의 위치,(vecball_x,vecball_y)공의 벡터값
-double p_ball[5], k_ball[5], vecball_x[5], vecball_y[5];
+double p_ball[8], k_ball[8], vecball_x[8], vecball_y[8];
 
 //공이 벽에 튕긴 횟수를 저장하는 변수
-int hit[5];
+int hit[8];
 
 //클릭한 곳의 x값과 ,y값을 저장하는 변수
 double c, d;
@@ -32,12 +36,131 @@ double c_ball, d_ball;
 
 //t = 거리 10씩 이동시 필요한 칸 수
 double t;
-double t_ball[5];
+double t_ball[8];
 
 //타이머1:체크함수 타이머, timermove: 움직임 타이머, timerball: 공의 움직임 타이머, timerenem[6]: 적의 움직임 타이머
 TimerID timer1,timermove;
-TimerID timerball[5];
+TimerID timerball[8];
 TimerID timerenem[6];
+TimerID timerframe;
+TimerID timerscore;
+
+
+//악당 생성함수
+void createenemy() {
+	//enemy[0] = createObject("images/enemy1.png");
+	locateObject(enemy[0], scene1, 1100, 223);
+	showObject(enemy[0]);
+	ex[0] = 1100;
+	ey[0] = 223;
+
+
+	locateObject(enemy[1], scene1, 1100, 123);
+	showObject(enemy[1]);
+	ex[1] = 1100;
+	ey[1] = 123;
+
+
+	//enemy[2] = createObject("images/enemy3.png");
+	locateObject(enemy[2], scene1, 1100, 23);
+	showObject(enemy[2]);
+	ex[2] = 1100;
+	ey[2] = 23;
+
+	//enemy[3] = createObject("images/enemy1.png");
+	locateObject(enemy[3], scene1, 1300, 23);
+	showObject(enemy[3]);
+	ex[3] = 1300;
+	ey[3] = 223;
+
+	//enemy[4] = createObject("images/enemy2.png");
+	locateObject(enemy[4], scene1, 1300, 23);
+	showObject(enemy[4]);
+	ex[4] = 1300;
+	ey[4] = 23;
+
+	//enemy[5] = createObject("images/enemy3.png");
+	locateObject(enemy[5], scene1, 1300, 23);
+	showObject(enemy[5]);
+	ex[5] = 1300;
+	ey[5] = 123;
+
+
+	//void scaleObject(ObjectID object, ObjectScale scale)
+	//물체(object)의 크기(scale)를 조정한다.
+	for (int k = 0; k <= 5; k++) {
+
+
+		scaleObject(enemy[k], 0.5f);            // 200%
+	}
+
+}
+
+
+//시작함수
+
+
+
+void pressstart() {
+	setTimer(timerscore, 8.0f);
+	startTimer(timerscore);
+	stopTimer(timerscore);
+	showTimer(timerscore);
+	for (int k = 0; k <= 5; k++) {
+		stopTimer(timerenem[k]);
+	}
+	stopTimer(timer1);
+	stopTimer(timermove);
+	for (int k = 0; k <= 7; k++) {
+		stopTimer(timerball[k]);
+
+	}
+	createenemy();
+	
+
+
+
+//주인공 생성
+p = 20, k = 30;
+
+locateObject(angel1, scene1, p, k);
+showObject(angel1);
+
+
+//악당 생성
+	createenemy();
+
+	//공숨김
+	for (int i = 0; i <= 7; i++)
+	{
+		hideObject(ball[i]);
+
+
+	}
+	//check숨김
+	hideObject(check);
+	
+	for (int i = 0; i <= 7; i++) {
+		hit[i] = 0;
+
+	}
+	ballnum = 0;
+	enterScene(scene1);
+	
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 //x를 멈출껀지 y를 멈출껀지 고름. 정지는 1, 지속 =0,  (1,1):둘다 정지, (1,0): x만 정지, (0,1): y만 정지
 void stop(int x,int y) {
@@ -95,8 +218,10 @@ void move_ball(ObjectID object,TimerID timer,float x, float y, float vec_x, floa
 void mouseCallback(ObjectID object, int x, int y, MouseAction action) {
 	//시작버튼 클릭시 시작
 	if (object == startbutton || object == startbutton2) {
-		enterScene(scene1);
-
+	
+		setObjectImage(startbutton, "images/restartbutton.png");
+		pressstart();
+		startTimer(timerframe);
 	}
 	else if (object == howbutton) {
 		enterScene(scene2);
@@ -152,7 +277,7 @@ void mouseCallback(ObjectID object, int x, int y, MouseAction action) {
 			startTimer(timerenem[i]);
 		}
 
-		for (int i = 0; i <= 4; i++) {
+		for (int i = 0; i <= 7; i++) {
 			if (i == ballnum) {
 				//먼저 공을 주인공 근처에 생성
 				p_ball[i] = p + 93;
@@ -179,6 +304,7 @@ void mouseCallback(ObjectID object, int x, int y, MouseAction action) {
 			}
 		
 		}
+		decreaseTimer(timerscore, 1.0f);
 		ballnum += 1;
 	}
 	if (object == wall1) {
@@ -188,7 +314,7 @@ void mouseCallback(ObjectID object, int x, int y, MouseAction action) {
 			startTimer(timerenem[i]);
 		}
 
-		for (int i = 0; i <= 4; i++) {
+		for (int i = 0; i <= 7; i++) {
 			if (i == ballnum) {
 				//먼저 공을 주인공 근처에 생성
 				p_ball[i] = p + 93;
@@ -201,7 +327,7 @@ void mouseCallback(ObjectID object, int x, int y, MouseAction action) {
 
 
 
-				//t[i]값은 공이 목표까지 가는데 몇칸인지 알려줌
+				//t[i]값은 공이 목표까지 거리 10씩 가는데 몇칸인지 알려줌
 				t_ball[i] = sqrt((x - p_ball[i]) * (x - p_ball[i]) + (d_ball - k_ball[i]) * (d_ball - k_ball[i])) / 10;
 
 				vecball_x[i] = (c_ball - p_ball[i]) / t_ball[i];
@@ -209,11 +335,12 @@ void mouseCallback(ObjectID object, int x, int y, MouseAction action) {
 
 				//0.1초에 한번씩 움직이는 타이머 작동
 				setTimer(timerball[i], 0.01f);
-
 				startTimer(timerball[i]);
+				
 			}
 
 		}
+		decreaseTimer(timerscore, 1.0f);
 		ballnum += 1;
 
 	}
@@ -224,6 +351,13 @@ void mouseCallback(ObjectID object, int x, int y, MouseAction action) {
 
 //타이머 콜백함수
 void timerCallback(TimerID timer) {
+	
+	if (timer == timerframe) {
+		setTimer(timerframe, 0.0001f);
+		startTimer(timerframe);
+
+	}
+	
 	//공이 적과 충돌시 소멸
 
 	//ex[6],ey[6]; 적의 좌표
@@ -232,17 +366,31 @@ void timerCallback(TimerID timer) {
 
 	//2.오른쪽선
 
-	//적이동 
 	int n = 0;
 	for (int i = 0; i <= 5; i++) {
-		if (ex[i] > 1280) {
+		if (ex[i] > 1800) {
 			n = n + 1;
-
+			
 		}
 
-		if (n == 5) {
-			showMessage("승리");
+		if (n == 6) {
+			stopTimer(timer1);
+			stopTimer(timermove);
+			for (int k = 0; k <= 7; k++) {
+				stopTimer(timerball[k]);
 
+			}
+			for (int k = 0; k <= 5; k++) {
+				stopTimer(timerenem[k]);
+			}
+
+			stopTimer(timerframe);
+
+			showMessage("성공했어요 축하드립니다!!");
+			enterScene(scene0);
+			
+			
+		
 		}
 	}
 
@@ -250,15 +398,40 @@ void timerCallback(TimerID timer) {
 	for (int i = 0; i <= 5; i++) {
 
 		if (ex[i] < 0) {
-			enterScene(scene0);
+			for (int k = 0; k <= 5; k++) {
+				stopTimer(timerenem[k]);
+			}
+			stopTimer(timer1);
+			stopTimer(timermove);
+			for (int k = 0; k <= 7; k++) {
+				stopTimer(timerball[k]);
 
-		}
+			}
+
+
+			stopTimer(timerframe);
+
+
 		
+
+
+
+			showMessage("실패에요~ 아쉽습니다ㅠㅠ");
+			enterScene(scene0);
+			createenemy();
+		
+		
+		}
+		//적이동
 		else if (timer == timerenem[i]) {
-				locateObject(enemy[i], scene1, ex[i] - 10, 10 + ey[i]);
+			if (ex[i] > 1800) {
+				continue;
+
+			}
+			locateObject(enemy[i], scene1, ex[i] - 10, 10 + ey[i]);
 				ex[i] -= 10;
 				ey[i] += 0;
-				setTimer(timerenem[i], 0.01f);
+				setTimer(timerenem[i], 0.025f);
 				startTimer(timerenem[i]);
 			}
 		}
@@ -286,31 +459,37 @@ void timerCallback(TimerID timer) {
 		if ((d - 10 <= k && k <= d + 10) && (c - 50 <= p && p <= c - 20)) {
 
 			stop(1, 1);
+			//변용
+			for (int i = 0; i <= 5; i++) {
+
+				stopTimer(timerenem[i]);
+			}
+
 		}
 	}
 
 	//만일 공의 타이머가 끝난다면 다시 시작하고 좌표까지 x,y벡터값씩 이동
-	for (int i = 0; i <= 4; i++) {
-		
+	for (int i = 0; i <= 7; i++) {
+
 		if (timer == timerball[i]) {
-			
+
 			//작동하지않음.. 왜일까..
 			//move_ball(ball[i], timerball[i], p_ball[i], k_ball[i], vecball_x, vecball_y);
 			//벽에 충돌시 튕긴다.
 			if (k_ball[i] > 305 || k_ball[i] <= 0) {
-		
+
 				vecball_y[i] = -vecball_y[i];
 				hit[i] += 1;
 			}
-
 			
+
 
 			locateObject(ball[i], scene1, p_ball[i] + vecball_x[i], k_ball[i] + vecball_y[i]);
 			p_ball[i] += vecball_x[i];
 			k_ball[i] += vecball_y[i];
-			setTimer(timerball[i], 0.0001f);
+			setTimer(timerball[i], 0.001f);
 			startTimer(timerball[i]);
-			
+
 		}
 		//벽에 세번 충돌시 사라짐
 		if (hit[i] == 3) {
@@ -319,80 +498,57 @@ void timerCallback(TimerID timer) {
 			stopTimer(timerball[i]);
 
 		}
-		
-
+	}
+	
 		//적과 충돌시 공 소멸
-		for (int i = 0; i <= 4; i++) {
+	if (timer == timerframe) {
+		bool exitOuterLoop = false;					// 바깥쪽 루프를 빠져나올지 결정하는 변수
+		for (int i = 0; i <= 7; i++) {
 
 			for (int k = 0; k <= 5; k++) {
-
-				// 크기 두배였을때는 if ((p_ball[i] + 40 >= ex[k] + 48 && p_ball[i] <= ex[k] + 123) && (k_ball[i] + 40 > ey[k] && k_ball[i] <= ey[k] + 110))
+				//공이 범위내에 닿을 경우 소멸
 				if ((p_ball[i] + 20 >= ex[k] + 24 && p_ball[i] <= ex[k] + 62) && (k_ball[i] + 40 > ey[k] && k_ball[i] <= ey[k] + 60)) {
-					//hideObject(ball[i]);
-					locateObject(ball[i], scene0, 1200, 900);
 					stopTimer(timerball[i]);
-					hideObject(enemy[k]);
-					locateObject(enemy[k], scene0, 1900, 100);
+					hideObject(ball[i]);
+					locateObject(ball[i], scene1, 1200, 900);
+					p_ball[i] = 1200;
+					k_ball[i] = 900;
+					
 					stopTimer(timerenem[k]);
+					hideObject(enemy[k]);
+					locateObject(enemy[k], scene1, 1900, 100);
+					ex[k] = 1900;
+					ey[k] = 100;
+
+
+					
+
+					exitOuterLoop = true;
+						//안쪽 루프를 끝냄
+					//변용<3>
+					for (int t = 0; t <= 5; t++) {
+
+						stopTimer(timerenem[t]);
+					}
+
+					break;
 				}
+
+
+			}
+			if (exitOuterLoop == true)    // 바깥쪽 루프도 빠져나오겠다고 결정했으면
+			{
+				break;// 바깥쪽 루프를 끝냄
 			}
 
+
 		}
-	
-	
 	}
+	
+	
 }
 
-//악당 생성함수
-void createenemy() {
-	enemy[0] = createObject("images/enemy1.png");
-	locateObject(enemy[0], scene1, 1100, 223);
-	showObject(enemy[0]);
-	ex[0] = 1100;
-	ey[0] = 223;
 
-
-	enemy[1] = createObject("images/enemy2.png");
-	locateObject(enemy[1], scene1, 1100, 123);
-	showObject(enemy[1]);
-	ex[1] = 1100;
-	ey[1] = 123;
-
-
-	enemy[2] = createObject("images/enemy3.png");
-	locateObject(enemy[2], scene1, 1100, 23);
-	showObject(enemy[2]);
-	ex[2] = 1100;
-	ey[2] = 23;
-	
-	enemy[3] = createObject("images/enemy1.png");
-	locateObject(enemy[3], scene1, 1300, 23);
-	showObject(enemy[3]);
-	ex[3] = 1300;
-	ey[3] = 223;
-
-	enemy[4] = createObject("images/enemy2.png");
-	locateObject(enemy[4], scene1, 1300, 23);
-	showObject(enemy[4]);
-	ex[4] = 1300;
-	ey[4] = 23;
-
-	enemy[5] = createObject("images/enemy3.png");
-	locateObject(enemy[5], scene1, 1300, 23);
-	showObject(enemy[5]);
-	ex[5] = 1300;
-	ey[5] = 123;
-	
-	//이게 변경점
-	//void scaleObject(ObjectID object, ObjectScale scale)
-	//물체(object)의 크기(scale)를 조정한다.
-	for (int k = 0; k <= 5; k++) {
-
-
-		scaleObject(enemy[k], 0.5f);            // 200%
-	}
-
-}
 
 
 
@@ -406,7 +562,9 @@ int main()
 	//타이머 선언
 	timer1 = createTimer(3.14f);
 	timermove = createTimer(3.14f);
-	for (int i = 0; i <= 9; i++) {
+	timerframe = createTimer(3.14f);
+	timerscore = createTimer(3.14f);
+	for (int i = 0; i <= 7; i++) {
 		timerball[i] = createTimer(3.14f);
 		
 	}
@@ -429,7 +587,7 @@ int main()
 	locateObject(map1, scene1, 0, 0);
 	showObject(map1);
 
-	p = 20, k = 30;
+	
 	
 	//버튼 생성
 	startbutton = createObject("images/startbutton.png");
@@ -449,6 +607,7 @@ int main()
 	//scene2(설명화면에 배치)
 	locateObject(startbutton2, scene2, 540, 15);
 	showObject(startbutton2);
+	
 	//체크 무늬 생성
 	check = createObject("images/check.png");
 	//벽생성
@@ -458,28 +617,54 @@ int main()
 	wall2 = createObject("images/wall.png");
 	locateObject(wall2, scene1, 0, 325);
 	showObject(wall2);
-
+	
+	/* 변형1
 	//주인공 생성
+	p = 20, k = 30;
 	angel1 = createObject("images/angel1.png");
 	locateObject(angel1, scene1, p, k);
 	showObject(angel1);
+	*/
+	enemy[0] = createObject("images/enemy1.png");
+	enemy[1] = createObject("images/enemy2.png");
+	enemy[2] = createObject("images/enemy3.png");
+	enemy[3] = createObject("images/enemy1.png");
+	enemy[4] = createObject("images/enemy2.png");
+	enemy[5] = createObject("images/enemy3.png");
+	
+	for (int i = 0; i <= 7; i++)
+	{
+		ball[i] = createObject("images/ball.png");
+
+
+	}
+
 
 	//악당 생성
 	createenemy();
 
+	/*변형2
 	//공생성
-	for (int i = 0; i <= 4; i++)
+	for (int i = 0; i <= 7; i++)
 	{
 		ball[i] = createObject("images/ball.png");
 		
 
 	}
-	
-	
-	for (int i = 0; i <= 4; i++) {
+	*/
+	/*변형3
+	for (int i = 0; i <= 7; i++) {
 		hit[0] = 0;
 
 	}
+	*/
+
+
+
+	//승리
+	angel1 = createObject("images/angel1.png");
+	setTimer(timerframe, 0.0001f);
+	startTimer(timerframe);
 	startGame(scene0);
 	
 }
